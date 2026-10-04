@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+<title>Translation</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6'/%3E%3C/svg%3E">
+<style>
+  /* Design tokens follow llama.cpp's own web UI so this page looks like part of it. */
+  :root {
+    --radius: .625rem;
+    --background: oklch(100% 0 0);
+    --foreground: oklch(14.5% 0 0);
+    --muted: oklch(97% 0 0);
+    --muted-foreground: oklch(55.6% 0 0);
+    --secondary: oklch(95% 0 0);
+    --primary: oklch(20.5% 0 0);
+    --primary-foreground: oklch(98.5% 0 0);
+    --border: oklch(87.5% 0 0);
+    --composer: oklch(98.5% 0 0);
+    --pill: oklch(100% 0 0);
+    --destructive: oklch(57.7% .245 27.325);
+    --shadow: 0 1px 3px rgb(0 0 0 / .1), 0 1px 2px rgb(0 0 0 / .06);
+    --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: oklch(16% 0 0);
+      --foreground: oklch(98.5% 0 0);
+      --muted: oklch(26.9% 0 0);
+      --muted-foreground: oklch(70.8% 0 0);
+      --secondary: oklch(29% 0 0);
+      --primary: oklch(92.2% 0 0);
+      --primary-foreground: oklch(20.5% 0 0);
+      --border: oklch(100% 0 0 / .3);
+      --composer: oklch(23.9% 0 0);
+      --pill: oklch(31.2% 0 0);
+      --destructive: oklch(70.4% .191 22.216);
+      --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body, .app { height: 100%; }
+  body {
+    margin: 0; background: var(--background); color: var(--foreground);
+    font-family: var(--font); font-size: 16px; line-height: 1.5;
+  }
+  button, select, textarea { font: inherit; color: inherit; }
+  button { background: none; border: 0; padding: 0; cursor: pointer; }
+  svg { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  :focus-visible { outline: 2px solid var(--muted-foreground); outline-offset: 2px; border-radius: 8px; }
+
+  /* Icon rail */
+  .rail { position: fixed; inset: 0 auto 0 0; width: 68px; display: flex; flex-direction: column; align-items: center; gap: 12px; padding-top: 22px; z-index: 5; }
+  .rail .logo { width: 24px; height: 24px; display: grid; place-items: center; margin-bottom: 6px; }
+  .rail .logo svg { font-size: 20px; }
+  .icon-btn { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; font-size: 18px; color: var(--foreground); }
+  .icon-btn:hover { background: var(--secondary); }
+
+  /* Main column */
+  main { height: 100%; display: flex; flex-direction: column; padding-left: 68px; }
+  .thread { flex: 1; overflow-y: auto; display: none; }
+  .thread-inner { max-width: 768px; margin: 0 auto; padding: 28px 16px 24px; display: flex; flex-direction: column; gap: 24px; }
+  .app.has-thread .thread { display: block; }
+  .hero { text-align: center; margin-bottom: 28px; }
+  .app.has-thread .hero { display: none; }
+  .hero h1 { margin: 0; font-size: 32px; line-height: 1.25; font-weight: 700; letter-spacing: -.01em; }
+  .hero p { margin: 8px 0 0; font-size: 18px; color: var(--muted-foreground); }
+  .dock { padding: 0 16px; }
+  .app:not(.has-thread) .dock { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-bottom: 12vh; }
+  .app.has-thread .dock { padding-bottom: 16px; }
+  .dock-inner { width: 100%; max-width: 768px; margin: 0 auto; }
+
+  /* Composer card */
+  .composer { background: var(--composer); border: 1px solid var(--border); border-radius: 24px; box-shadow: var(--shadow); padding: 12px; }
+  .composer textarea {
+    display: block; width: 100%; min-height: 52px; max-height: 40vh; resize: none; border: 0; outline: 0; background: transparent;
+    padding: 8px 8px 4px; font-size: 16px; line-height: 1.5;
+  }
+  .composer textarea::placeholder { color: var(--muted-foreground); }
+  .bar { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .bar .spacer { flex: 1; }
+  .pills { display: flex; align-items: center; gap: 4px; min-width: 0; }
+  .pill {
+    appearance: none; -webkit-appearance: none; background: var(--pill); border: 0; border-radius: 10px; box-shadow: var(--shadow);
+    padding: 5px 26px 5px 10px; font-size: 14px; font-weight: 500; cursor: pointer; max-width: 160px; text-overflow: ellipsis;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 7px center; background-size: 14px;
+  }
+  .pill:hover { filter: brightness(.97); }
+  .seg { display: inline-flex; background: var(--pill); border-radius: 10px; box-shadow: var(--shadow); padding: 2px; gap: 2px; }
+  .seg[hidden] { display: none; }
+  .seg button { border-radius: 8px; padding: 3px 10px; font-size: 14px; font-weight: 500; color: var(--muted-foreground); white-space: nowrap; }
+  .seg button:hover { color: var(--foreground); }
+  .seg button[aria-pressed="true"] { background: var(--primary); color: var(--primary-foreground); }
+  .swap { width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center; color: var(--muted-foreground); font-size: 16px; }
+  .swap:hover { background: var(--secondary); color: var(--foreground); }
+  .model-badge { flex: 0 1 auto; min-width: 0; display: inline-flex; align-items: center; gap: 6px; background: var(--pill); border-radius: 10px; box-shadow: var(--shadow); padding: 5px 10px; font-size: 14px; font-weight: 500; max-width: 220px; }
+  .model-badge span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .send { flex: none; margin-left: auto; width: 32px; height: 32px; border-radius: 999px; display: grid; place-items: center; background: var(--primary); color: var(--primary-foreground); font-size: 16px; }
+  .send[disabled] { opacity: .5; cursor: default; background: var(--muted-foreground); color: var(--background); }
+  .hint { text-align: center; margin: 10px 0 0; font-size: 12px; color: var(--muted-foreground); }
+
+  /* Thread */
+  .row-user { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .bubble { background: var(--secondary); border-radius: 24px; padding: 8px 16px; max-width: 80%; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .meta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted-foreground); }
+  .meta .m { display: inline-flex; align-items: center; gap: 4px; }
+  .answer { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 16px; line-height: 1.65; padding: 4px 2px; }
+  .answer.error { color: var(--destructive); }
+  .answer .caret { display: inline-block; width: 8px; height: 1em; vertical-align: -2px; background: var(--muted-foreground); border-radius: 2px; margin-left: 2px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .actions { display: flex; gap: 4px; }
+  .actions .icon-btn { width: 28px; height: 28px; font-size: 16px; color: var(--muted-foreground); }
+  .actions .icon-btn:hover { color: var(--foreground); }
+  .lang-tag { font-size: 12px; color: var(--muted-foreground); }
+
+  /* Settings popover */
+  .pop { position: fixed; left: 60px; top: 150px; width: 260px; background: var(--background); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 8px 30px rgb(0 0 0 / .18); padding: 14px; z-index: 10; display: none; }
+  .pop.open { display: block; }
+  .pop h2 { margin: 0 0 10px; font-size: 14px; }
+  .pop label { display: block; font-size: 13px; color: var(--muted-foreground); margin: 10px 0 4px; }
+  .pop select { width: 100%; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--background); }
+  .pop input[type=range] { width: 100%; accent-color: var(--primary); }
+  .pop .val { float: right; color: var(--foreground); }
+
+  @media (max-width: 640px) {
+    .rail { display: none; } main { padding-left: 0; }
+    .hero h1 { font-size: 26px; } .hero p { font-size: 16px; }
+    .model-badge { display: none; }
+    .bar, .pills { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <nav class="rail" aria-label="Sidebar">
+    <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></svg></div>
+    <button class="icon-btn" id="new" title="New translation" aria-label="New translation"><svg viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>
+    <button class="icon-btn" id="settings" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24"><path d="M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.1-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.5a2 2 0 0 1-1 1.8l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.1-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.1.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.8v-.5a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.1.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </nav>
+
+  <div class="pop" id="pop" role="dialog" aria-label="Settings">
+    <h2>Settings</h2>
+    <label for="tone">Tone</label>
+    <select id="tone">
+      <option value="">Neutral</option>
+      <option value="Use a formal, polite register.">Formal</option>
+      <option value="Use a casual, friendly register.">Casual</option>
+    </select>
+    <label for="temp">Temperature <span class="val" id="tempval">0.2</span></label>
+    <input type="range" id="temp" min="0" max="1" step="0.1" value="0.2">
+  </div>
+
+  <main>
+    <div class="thread" id="thread"><div class="thread-inner" id="messages" aria-live="polite"></div></div>
+
+    <div class="dock">
+      <div class="dock-inner">
+        <div class="hero">
+          <h1>Translate</h1>
+          <p>Choose your languages, then type or paste text to get started</p>
+        </div>
+        <form class="composer" id="form">
+          <textarea id="text" rows="1" placeholder="Type text to translate..." aria-label="Text to translate" autofocus></textarea>
+          <div class="bar">
+            <div class="pills">
+              <select class="pill" id="from" aria-label="Translate from"></select>
+              <button type="button" class="swap" id="swap" title="Swap languages" aria-label="Swap languages"><svg viewBox="0 0 24 24"><path d="m16 3 4 4-4 4M20 7H4M8 21l-4-4 4-4M4 17h16"/></svg></button>
+              <select class="pill" id="to" aria-label="Translate to"></select>
+              <div class="seg" id="fform" role="group" aria-label="French form of address" hidden>
+                <button type="button" data-form="vous" aria-pressed="true" title="Formal: use vous">Formal (vous)</button>
+                <button type="button" data-form="tu" aria-pressed="false" title="Normal: use tu">Normal (tu)</button>
+              </div>
+            </div>
+            <div class="spacer"></div>
+            <div class="model-badge" title="Model"><svg viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg><span id="model">connecting...</span></div>
+            <button type="submit" class="send" id="send" aria-label="Translate" disabled><svg viewBox="0 0 24 24"><path d="m5 12 7-7 7 7M12 19V5"/></svg></button>
+          </div>
+        </form>
+        <p class="hint">Enter to translate, Shift+Enter for a new line. Everything stays on your computer.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var LANGS = ["English","Spanish","French","German","Italian","Portuguese","Dutch","Russian","Ukrainian","Polish","Turkish","Arabic","Hebrew","Hindi","Bengali","Urdu","Chinese","Japanese","Korean","Vietnamese","Thai","Indonesian","Swedish","Greek"];
+  var AUTO = "Detect language";
+  // The page always opens on this example, so there is something to try with one click.
+  var EXAMPLE = "Good morning! I hope you are doing well.\nCould you please send me the report by tomorrow?";
+  var DEFAULTS = { from: "English", to: "French", form: "vous", tone: "", temp: "0.2" };
+  var form = DEFAULTS.form;
+  var messages = [], controller = null, busy = false;
+
+  var ICONS = {
+    copy: '<svg viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>',
+    redo: '<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>',
+    stop: '<svg viewBox="0 0 24 24" style="fill:currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+    up: '<svg viewBox="0 0 24 24"><path d="m5 12 7-7 7 7M12 19V5"/></svg>',
+    tokens: '<svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>',
+    clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+    speed: '<svg viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.3 19a10 10 0 1 1 17.4 0"/></svg>'
+  };
+
+  function fillSelect(el, items) { items.forEach(function (l) { var o = document.createElement("option"); o.value = l; o.textContent = l; el.appendChild(o); }); }
+  function setSend() { $("send").disabled = !busy && !$("text").value.trim(); }
+  function grow() { var t = $("text"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, window.innerHeight * 0.4) + "px"; }
+
+  function setBusy(on) {
+    busy = on; var s = $("send");
+    s.innerHTML = on ? ICONS.stop : ICONS.up;
+    s.setAttribute("aria-label", on ? "Stop" : "Translate");
+    setSend();
+  }
+
+  function render() {
+    $("app").classList.toggle("has-thread", messages.length > 0);
+    var box = $("messages"); box.textContent = "";
+    messages.forEach(function (m, idx) {
+      var u = document.createElement("div"); u.className = "row-user";
+      var b = document.createElement("div"); b.className = "bubble"; b.textContent = m.source; u.appendChild(b);
+      var tag = document.createElement("div"); tag.className = "lang-tag";
+      tag.textContent = (m.from === AUTO ? "Detected" : m.from) + "  →  " + m.to + (m.to === "French" && m.form ? " (" + m.form + ")" : ""); u.appendChild(tag);
+      box.appendChild(u);
+
+      var a = document.createElement("div"); a.className = "answer" + (m.error ? " error" : "");
+      a.textContent = m.result;
+      if (m.status === "streaming") { var c = document.createElement("span"); c.className = "caret"; a.appendChild(c); }
+      box.appendChild(a);
+
+      if (m.status !== "streaming") {
+        if (m.stats) {
+          var meta = document.createElement("div"); meta.className = "meta";
+          meta.innerHTML = '<span class="m">' + ICONS.tokens + m.stats.tokens + ' tokens</span><span class="m">' + ICONS.clock + m.stats.secs.toFixed(1) + 's</span><span class="m">' + ICONS.speed + m.stats.tps.toFixed(1) + ' t/s</span>';
+          box.appendChild(meta);
+        }
+        var act = document.createElement("div"); act.className = "actions";
+        act.appendChild(actionBtn(ICONS.copy, "Copy translation", function (ev) {
+          if (!m.result) return;
+          navigator.clipboard.writeText(m.result).then(function () { flash(ev.currentTarget); });
+        }));
+        act.appendChild(actionBtn(ICONS.redo, "Translate again", function () { if (!busy) retranslate(idx); }));
+        box.appendChild(act);
+      }
+    });
+    var th = $("thread"); th.scrollTop = th.scrollHeight;
+  }
+
+  function actionBtn(svg, label, fn) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "icon-btn";
+    b.title = label; b.setAttribute("aria-label", label); b.innerHTML = svg; b.onclick = fn; return b;
+  }
+  function flash(btn) { var t = btn.title; btn.title = "Copied"; btn.style.color = "var(--foreground)"; setTimeout(function () { btn.title = t; btn.style.color = ""; }, 900); }
+
+  function buildMessages(m) {
+    var tone = $("tone").value;
+    if (m.to === "French" && m.form) {
+      // For French the vous/tu switch decides the register, so the general tone setting is not applied.
+      tone = m.form === "vous"
+        ? "Address the reader with the formal \"vous\" form and a polite, formal register."
+        : "Address the reader with the informal \"tu\" form and a natural, friendly register.";
+    }
+    var system = "You are a professional translator. Output only the translation, with no notes, explanations or quotation marks around it." + (tone ? " " + tone : "");
+    var src = m.from === AUTO ? "Detect the source language automatically." : "The source language is " + m.from + ".";
+    return [
+      { role: "system", content: system },
+      { role: "user", content: "Translate the text below into " + m.to + ". " + src + "\n\nText:\n" + m.source }
+    ];
+  }
+
+  async function translate(m) {
+    m.result = ""; m.error = false; m.stats = null; m.status = "streaming";
+    controller = new AbortController(); setBusy(true); render();
+    var t0 = performance.now(), chunks = 0, usage = null;
+    try {
+      var res = await fetch("/v1/chat/completions", {
+        method: "POST", headers: { "Content-Type": "application/json" }, signal: controller.signal,
+        body: JSON.stringify({ messages: buildMessages(m), stream: true, stream_options: { include_usage: true }, temperature: parseFloat($("temp").value) })
+      });
+      if (!res.ok) throw new Error("Server returned " + res.status + ": " + (await res.text()).slice(0, 200));
+      var reader = res.body.getReader(), dec = new TextDecoder(), buf = "";
+      while (true) {
+        var r = await reader.read(); if (r.done) break;
+        buf += dec.decode(r.value, { stream: true });
+        var lines = buf.split("\n"); buf = lines.pop();
+        for (var i = 0; i < lines.length; i++) {
+          var line = lines[i].trim();
+          if (line.indexOf("data:") !== 0) continue;
+          var data = line.slice(5).trim(); if (data === "[DONE]") continue;
+          try {
+            var j = JSON.parse(data);
+            if (j.usage) usage = j.usage;
+            var d = j.choices && j.choices[0] && j.choices[0].delta;
+            if (d && d.content) { m.result += d.content; chunks++; }
+          } catch (e) { /* partial JSON */ }
+        }
+        updateLast(m);
+      }
+      var secs = (performance.now() - t0) / 1000, tokens = (usage && usage.completion_tokens) || chunks;
+      m.stats = { tokens: tokens, secs: secs, tps: secs > 0 ? tokens / secs : 0 };
+    } catch (e) {
+      if (e.name === "AbortError") { if (!m.result) m.result = "Stopped."; }
+      else { m.error = true; m.result = "Error: " + e.message; }
+    } finally {
+      m.status = "done"; controller = null; setBusy(false); render();
+    }
+  }
+
+  function updateLast(m) {
+    var answers = document.querySelectorAll(".answer"), a = answers[answers.length - 1];
+    if (!a) return;
+    a.textContent = m.result;
+    var c = document.createElement("span"); c.className = "caret"; a.appendChild(c);
+    var th = $("thread"); th.scrollTop = th.scrollHeight;
+  }
+
+  function submit() {
+    if (busy) { if (controller) controller.abort(); return; }
+    var text = $("text").value.trim(); if (!text) return;
+    var m = { source: text, from: $("from").value, to: $("to").value, form: form, result: "", status: "streaming" };
+    messages.push(m); $("text").value = ""; grow(); setSend();
+    translate(m);
+  }
+
+  function retranslate(idx) {
+    var m = messages[idx]; m.to = $("to").value; m.from = $("from").value; m.form = form; translate(m);
+  }
+
+  function swap() {
+    var f = $("from"), t = $("to"), fv = f.value, tv = t.value;
+    if (fv === AUTO) {
+      // Nothing sensible to swap into "To" when the source is auto-detected; just flip to English.
+      f.value = tv; t.value = tv === "English" ? "Spanish" : "English";
+    } else { f.value = tv; t.value = fv; }
+    updateForm();
+  }
+
+  // Show the vous/tu switch only when translating into French
+  function updateForm() {
+    $("fform").hidden = $("to").value !== "French";
+    Array.prototype.forEach.call($("fform").querySelectorAll("button"), function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-form") === form ? "true" : "false");
+    });
+  }
+
+  function resetToDefaults() {
+    $("from").value = DEFAULTS.from; $("to").value = DEFAULTS.to; form = DEFAULTS.form;
+    $("tone").value = DEFAULTS.tone; $("temp").value = DEFAULTS.temp;
+    $("tempval").textContent = parseFloat(DEFAULTS.temp).toFixed(1);
+    $("text").value = EXAMPLE; grow(); setSend(); updateForm();
+  }
+
+  function init() {
+    fillSelect($("from"), [AUTO].concat(LANGS));
+    fillSelect($("to"), LANGS);
+    resetToDefaults();
+
+    $("form").addEventListener("submit", function (e) { e.preventDefault(); submit(); });
+    $("text").addEventListener("input", function () { grow(); setSend(); });
+    $("text").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); submit(); }
+    });
+    $("to").onchange = updateForm;
+    $("temp").oninput = function () { $("tempval").textContent = parseFloat(this.value).toFixed(1); };
+    Array.prototype.forEach.call($("fform").querySelectorAll("button"), function (b) {
+      b.onclick = function () { form = b.getAttribute("data-form"); updateForm(); };
+    });
+    $("swap").onclick = swap;
+    $("new").onclick = function () {
+      if (controller) controller.abort();
+      messages = []; render(); resetToDefaults(); $("text").focus();
+    };
+    $("settings").onclick = function (e) { e.stopPropagation(); $("pop").classList.toggle("open"); };
+    document.addEventListener("click", function (e) { if (!$("pop").contains(e.target)) $("pop").classList.remove("open"); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") $("pop").classList.remove("open"); });
+
+    fetch("/v1/models").then(function (r) { return r.json(); }).then(function (j) {
+      var m = (j.data && j.data[0] && j.data[0].id) || (j.models && j.models[0] && (j.models[0].name || j.models[0].model)) || "";
+      $("model").textContent = m ? m.split(/[\\/]/).pop().replace(/\.gguf$/i, "") : "connected";
+    }).catch(function () { $("model").textContent = "server not reachable"; });
+
+    render(); setSend(); updateForm();
+  }
+  init();
+})();
+</script>
+</body>
+</html>

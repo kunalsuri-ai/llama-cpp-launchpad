@@ -1,0 +1,20 @@
+# Model files are large; never commit them
+*.gguf
+*.bin
+
+# Local llama.cpp builds or downloads
+bin/
+llama-server
+llama-server.exe
+llama-release/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Logs and local Claude Code state
+*.log
+.claude/
