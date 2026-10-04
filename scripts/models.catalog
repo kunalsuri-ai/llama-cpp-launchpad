@@ -1,0 +1,18 @@
+# Curated models for model-setup (read by scripts/unix/model-setup.sh and scripts/win/model-setup.ps1).
+# One model per line, fields separated by "|":
+#   name | Hugging Face repo | file | size in bytes | tags | note
+# Tags: chat, translation, coding, fast. Sizes are the real file sizes, all repos are public (not gated).
+# Download URL: https://huggingface.co/<repo>/resolve/main/<file>
+gemma-3-1b-it-Q4_K_M|ggml-org/gemma-3-1b-it-GGUF|gemma-3-1b-it-Q4_K_M.gguf|806058240|chat,fast|Smallest and fastest; answers are rough
+Llama-3.2-1B-Instruct-Q4_K_M|bartowski/Llama-3.2-1B-Instruct-GGUF|Llama-3.2-1B-Instruct-Q4_K_M.gguf|807694464|chat,fast|Tiny and quick; fine for short tasks
+Qwen3-1.7B-Q4_K_M|ggml-org/Qwen3-1.7B-GGUF|Qwen3-1.7B-Q4_K_M.gguf|1282439264|chat,translation,fast|Small, multilingual, good speed
+qwen2.5-coder-1.5b-q8_0|ggml-org/Qwen2.5-Coder-1.5B-Q8_0-GGUF|qwen2.5-coder-1.5b-q8_0.gguf|1646573056|coding,fast|Small coding model
+Llama-3.2-3B-Instruct-Q4_K_M|bartowski/Llama-3.2-3B-Instruct-GGUF|Llama-3.2-3B-Instruct-Q4_K_M.gguf|2019377696|chat|Solid small all-rounder
+Phi-3.5-mini-instruct-Q4_K_M|bartowski/Phi-3.5-mini-instruct-GGUF|Phi-3.5-mini-instruct-Q4_K_M.gguf|2393232672|chat|Strong reasoning for its size, mostly English
+gemma-3-4b-it-Q4_K_M|ggml-org/gemma-3-4b-it-GGUF|gemma-3-4b-it-Q4_K_M.gguf|2489757856|chat,translation|Best small all-rounder; keeps to vous or tu
+Qwen3-4B-Q4_K_M|ggml-org/Qwen3-4B-GGUF|Qwen3-4B-Q4_K_M.gguf|2497280640|chat,translation,coding|Capable and multilingual
+qwen2.5-coder-3b-q8_0|ggml-org/Qwen2.5-Coder-3B-Q8_0-GGUF|qwen2.5-coder-3b-q8_0.gguf|3285476160|coding|Mid-size coding model
+Qwen2.5-Coder-7B-Instruct-Q4_K_M|bartowski/Qwen2.5-Coder-7B-Instruct-GGUF|Qwen2.5-Coder-7B-Instruct-Q4_K_M.gguf|4683074336|coding|Strong coding model, needs about 8 GB of memory
+gemma-3-12b-it-Q4_K_M|ggml-org/gemma-3-12b-it-GGUF|gemma-3-12b-it-Q4_K_M.gguf|7300574976|chat,translation|High quality, needs 12 GB or more
+Qwen3-8B-Q8_0|ggml-org/Qwen3-8B-GGUF|Qwen3-8B-Q8_0.gguf|8709518656|chat,translation,coding|Very capable, needs 12 GB or more
+Qwen3-14B-Q4_K_M|ggml-org/Qwen3-14B-GGUF|Qwen3-14B-Q4_K_M.gguf|9001753376|chat,translation,coding|Large, needs 16 GB or more

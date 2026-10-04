@@ -62,6 +62,11 @@ if [ "$KILL_EXISTING" = "1" ] && pgrep -x llama-server >/dev/null 2>&1; then
   echo "done"
 fi
 
+# --- Weekly nudge: offer to check for new models that fit this machine ------------
+# (silent unless interactive, set up before, and the check is due; CHECK_DAYS=0 disables)
+PY="$(command -v python3 || command -v python)"   # model-setup is optional: skipped without Python
+[ -n "$PY" ] && "$PY" "$ROOT_DIR/scripts/model_setup.py" --weekly-prompt
+
 # --- Collect models (skip multimodal projector files) ------------------------
 models=(); sizes=()
 for f in "$MODELS_DIR"/*.gguf; do
@@ -72,7 +77,16 @@ for f in "$MODELS_DIR"/*.gguf; do
 done
 if [ ${#models[@]} -eq 0 ]; then
   echo "${RED}No .gguf models found in $MODELS_DIR${R}"
-  echo "Download one, e.g. from https://huggingface.co/ggml-org (see README.md)."
+  if [ -n "$PY" ]; then
+    echo "Not sure which model suits your machine? ${B}model-setup${R} picks one for you:"
+    echo "  ./scripts/unix/model-setup.sh"
+    if [ -t 0 ]; then
+      printf 'Run it now? %s[Y/n]%s ' "$D" "$R"; read -r ans
+      case "$ans" in n|N|no) ;; *) exec "$PY" "$ROOT_DIR/scripts/model_setup.py" ;; esac
+    fi
+  else
+    echo "Download one, e.g. from https://huggingface.co/ggml-org (see README.md)."
+  fi
   exit 1
 fi
 

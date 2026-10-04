@@ -1,0 +1,8 @@
+{"id":"ggml-org/NewModel-3B-GGUF","gated":false,"private":false,"siblings":[
+ {"rfilename":".gitattributes","size":1800},
+ {"rfilename":"README.md","size":9000},
+ {"rfilename":"NewModel-3B-Q8_0.gguf","size":3400000000},
+ {"rfilename":"NewModel-3B-Q4_K_M.gguf","size":2000000000},
+ {"rfilename":"mmproj-NewModel-3B-f16.gguf","size":800000000},
+ {"rfilename":"NewModel-3B-Q6_K-00001-of-00002.gguf","size":2500000000},
+ {"rfilename":"sub/NewModel-3B-Q4_0.gguf","size":1900000000}]}

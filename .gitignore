@@ -18,3 +18,12 @@ Thumbs.db
 # Logs and local Claude Code state
 *.log
 .claude/
+
+# Personal setup profile written by model-setup (hardware, installed model, last check)
+.launchpad-state
+.launchpad-state.tmp.*
+*.part
+
+# Python
+__pycache__/
+*.pyc

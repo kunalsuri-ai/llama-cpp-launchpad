@@ -62,12 +62,35 @@ if ($KillExisting -eq '1') {
     }
 }
 
+# --- model-setup is optional: it needs Python 3 (standard library only) ------
+$SetupScript = Join-Path $RootDir 'scripts\model_setup.py'
+$Py = $null
+foreach ($name in 'py', 'python') {
+    $c = Get-Command $name -ErrorAction SilentlyContinue
+    if ($c -and $c.Source -notlike '*WindowsApps*') { $Py = $c.Source; break }   # skip the Microsoft Store stub
+}
+function Invoke-ModelSetup([string[]]$Arguments) {
+    if ((Split-Path -Leaf $Py) -like 'py*') { & $Py -3 $SetupScript @Arguments } else { & $Py $SetupScript @Arguments }
+}
+
+# Weekly nudge: offer to check for new models that fit this machine (silent unless it is due)
+if ($Py -and [Environment]::UserInteractive -and -not [Console]::IsInputRedirected) { Invoke-ModelSetup @('--weekly-prompt') }
+
 # --- Collect models (skip multimodal projector files) ------------------------
 $models = @(Get-ChildItem -Path $ModelsDir -Filter '*.gguf' -File -ErrorAction SilentlyContinue |
             Where-Object { $_.Name -notlike 'mmproj*' } | Sort-Object Name)
 if ($models.Count -eq 0) {
     Write-Host "No .gguf models found in $ModelsDir" -ForegroundColor Red
-    Write-Host 'Download one, e.g. from https://huggingface.co/ggml-org (see README.md).'
+    if ($Py) {
+        Write-Host 'Not sure which model suits your machine? model-setup picks one for you:'
+        Write-Host '  scripts\win\model-setup.bat'
+        if (-not [Console]::IsInputRedirected) {
+            $ans = Read-Host 'Run it now? [Y/n]'
+            if ($ans -notmatch '^(n|no)$') { Invoke-ModelSetup @(); exit 0 }
+        }
+    } else {
+        Write-Host 'Download one, e.g. from https://huggingface.co/ggml-org (see README.md).'
+    }
     exit 1
 }
 

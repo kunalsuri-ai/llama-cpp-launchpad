@@ -1,5 +1,6 @@
 # Keep line endings correct on every platform
 *.sh        text eol=lf
+*.py        text eol=lf
 *.command   text eol=lf
 *.ps1       text eol=crlf
 *.bat       text eol=crlf
