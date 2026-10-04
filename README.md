@@ -1,9 +1,19 @@
-# llama-cpp-launchpad
+<div align="center">
 
-A small terminal launcher for [llama.cpp](https://github.com/ggml-org/llama.cpp) on **Linux, macOS and Windows**.
-Run one script, pick a model from the `.gguf` files in the `models/` folder with the arrow keys, and it starts
-`llama-server`, then choose an interface: **llama.cpp Default** (its built-in chat) or **Translation** (a translator page
-that matches its look). The chosen page opens in your browser.
+# 🚀 llama-cpp-launchpad
+
+**Run local LLMs with one script. Pick a model, pick an interface, start chatting.**
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+![Platforms](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-blue)
+![Powered by](https://img.shields.io/badge/powered%20by-llama.cpp-orange)
+![Dependencies](https://img.shields.io/badge/dependencies-none-lightgrey)
+
+</div>
+
+A small terminal launcher for [llama.cpp](https://github.com/ggml-org/llama.cpp). It lists the `.gguf` files in
+`models/`, lets you choose one with the arrow keys, starts `llama-server`, and opens the interface you pick in your
+browser: llama.cpp's built-in chat, or a translator page that matches its look.
 
 ```
   ✻ llama-cpp-launchpad  local model server
@@ -21,13 +31,39 @@ that matches its look). The chosen page opens in your browser.
     Translation                                translator
 ```
 
+## ✨ Highlights
+
+- **Works everywhere.** Bash on Linux and macOS, PowerShell on Windows, with a double-click launcher for both macOS and Windows.
+- **Private by default.** Everything runs on your machine, and the server listens on localhost only.
+- **Two interfaces.** llama.cpp's own chat page, or a streaming **Translation** page with English → French preset, formal/informal French (*vous* / *tu*), tone and temperature controls.
+- **No dependencies.** The translation UI is one HTML file served by `llama-server` itself.
+- **Configurable.** Port, model folder, server path and extra flags are all environment variables.
+
+## ⚡ Quick start
+
+```bash
+# 1. Get llama-server (skip if `llama-server --version` already works)
+brew install llama.cpp            # macOS; Windows: winget install llama.cpp
+
+# 2. Download a model into models/
+cd models
+curl -L -O https://huggingface.co/ggml-org/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf
+cd ..
+
+# 3. Launch
+chmod +x scripts/unix/serve.sh scripts/mac/serve.command
+./scripts/unix/serve.sh           # Windows: double-click scripts\win\serve.bat
+```
+
+Linux users: use a [release download](#1-get-llamacpp) instead of step 1. More models are listed in [`models/README.md`](models/README.md).
+
 | Platform | Launcher | Needs |
 |---|---|---|
 | Linux | `scripts/unix/serve.sh` | bash, curl |
 | macOS | `scripts/unix/serve.sh`, or double-click `scripts/mac/serve.command` | bash (the built-in one works), curl |
 | Windows | double-click `scripts/win/serve.bat`, or run `scripts\win\serve.ps1` | PowerShell 5.1 (built in) or 7 |
 
-## Project layout
+## 📁 Project layout
 
 ```
 llama-cpp-launchpad/
@@ -42,38 +78,30 @@ llama-cpp-launchpad/
 └── README.md
 ```
 
-## Quick start
+## 🔧 Setup in detail
 
-1. **Have `llama-server`?** Check (step 1 below). If not, install it.
-2. **Put a model** (a `.gguf` file) in the `models/` folder (step 2).
-3. **Run the launcher** for your system (step 3), pick a model, and chat in the browser.
+### 1. Get llama.cpp
 
-## 1. Get llama.cpp (the `llama-server` program)
-
-**First, check whether you already have it.** Open a terminal and run:
+First check whether you already have it:
 
 ```bash
-llama-server --version          # Linux / macOS
-```
-```powershell
-llama-server --version          # Windows (PowerShell)
+llama-server --version
 ```
 
-If it prints a version, you're done: the launcher finds it automatically through your `PATH`.
-This includes Windows users who installed it earlier with `winget install llama.cpp`.
-If the command isn't found, install it:
+If it prints a version you're done. The launcher finds it through your `PATH`, including installs made earlier with
+`winget install llama.cpp`. If the command isn't found, install it:
 
 - **Windows:** `winget install llama.cpp`, then open a **new** terminal so it is on your `PATH`.
-- **macOS:** `brew install llama.cpp`, or use a release download (below).
-  If macOS blocks a downloaded binary, run `xattr -dr com.apple.quarantine <folder>` on the unpacked folder.
+- **macOS:** `brew install llama.cpp`, or use a release download (below). If macOS blocks a downloaded binary, run
+  `xattr -dr com.apple.quarantine <folder>` on the unpacked folder.
 - **Linux:** use a release download (below). `brew install llama.cpp` also works, but in one test on Linux the
   Homebrew build's web page returned 404 (the API still worked). If that happens, use the release build.
 - **Any platform:** build from source (see the llama.cpp README).
 
-**Release download (no installer, no compiling):** get the build for your system from the
-[releases page](https://github.com/ggml-org/llama.cpp/releases) (for example `ubuntu-x64` for plain CPU,
-`vulkan` for AMD/Intel GPUs, `macos-arm64` for Apple Silicon). Unpack it, then copy **everything in the unpacked
-folder** (not just `llama-server`, since it needs the library files next to it) into this project's `bin/` folder:
+**Release download (no installer, no compiling).** Get the build for your system from the
+[releases page](https://github.com/ggml-org/llama.cpp/releases): for example `ubuntu-x64` for plain CPU, `vulkan` for
+AMD/Intel GPUs, `macos-arm64` for Apple Silicon. Unpack it, then copy **everything in the unpacked folder** (not just
+`llama-server`, since it needs the library files next to it) into this project's `bin/` folder:
 
 ```bash
 mkdir -p bin
@@ -83,19 +111,13 @@ cp -r llama-*/* bin/              # the folder name inside the archive can diffe
 
 The launcher checks `bin/` automatically. On Windows, unzip into `bin\` so that `bin\llama-server.exe` exists.
 
-## 2. Get a model
+### 2. Get a model
 
-Download any `.gguf` file into the `models/` folder, for example:
+Download any `.gguf` file into `models/`. Copy-paste commands for a few good starters are in
+[`models/README.md`](models/README.md); browse more at <https://huggingface.co/ggml-org>. Bigger models give better
+answers but need more RAM. (`curl` is built into Windows 10/11; in PowerShell use `curl.exe`.)
 
-```bash
-cd models
-curl -L -O https://huggingface.co/ggml-org/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-Q4_K_M.gguf
-```
-
-(`curl` is also built into Windows 10/11; in PowerShell use `curl.exe`.)
-Browse more at <https://huggingface.co/ggml-org>. Bigger models give better answers but need more RAM.
-
-## 3. Run
+### 3. Run
 
 **Linux / macOS**
 
@@ -104,7 +126,7 @@ chmod +x scripts/unix/serve.sh scripts/mac/serve.command
 ./scripts/unix/serve.sh
 ```
 
-**Windows**: double-click `scripts\win\serve.bat`, or in a terminal:
+**Windows:** double-click `scripts\win\serve.bat`, or in a terminal:
 
 ```powershell
 .\scripts\win\serve.bat
@@ -120,7 +142,7 @@ LLAMA_SERVER=/path/to/llama-server ./scripts/unix/serve.sh            # Linux / 
 $env:LLAMA_SERVER = "C:\path\to\llama-server.exe"; .\scripts\win\serve.bat   # Windows
 ```
 
-## Interfaces
+## 🖥️ Interfaces
 
 After you pick a model, the launcher asks which interface to open:
 
@@ -129,9 +151,11 @@ After you pick a model, the launcher asks which interface to open:
 | **llama.cpp Default** | llama.cpp's own chat page, built into `llama-server` |
 | **Translation** | a translator page in `ui/translation/`, styled to match the default page (same colors, light and dark) |
 
-**Translation** opens with a two-line English example already in the box and **English → French** selected, so you can
-press the send button right away to see a translation. (It always opens in this default state, and the "new translation"
-button in the left bar returns to it.) Then you can:
+### Translation
+
+It opens with a two-line English example already in the box and **English → French** selected, so you can press the
+send button right away. It always opens in this state, and the "new translation" button in the left bar returns to it.
+From there you can:
 
 - pick the source language (or auto-detect) and the target language, and swap them
 - when the target is **French**, choose **Formal (vous)** or **Normal (tu)** with the switch next to the language
@@ -140,8 +164,8 @@ button in the left bar returns to it.) Then you can:
   copy it or translate it again
 - open the gear icon to set the tone (for languages other than French) and the temperature
 
-It is a single HTML file with no outside dependencies, served by `llama-server` itself. Translation quality depends on
-the model: small models (1B) are rough, and 4B and up are noticeably better, including at keeping to *vous* or *tu*.
+Translation quality depends on the model. Small models (1B) are rough; 4B and up are noticeably better, including at
+keeping to *vous* or *tu*.
 
 To skip the interface question, set `UI` (Windows: `$env:UI = "translation"`):
 
@@ -150,7 +174,7 @@ UI=translation ./scripts/unix/serve.sh
 UI=default ./scripts/unix/serve.sh
 ```
 
-## Options
+## ⚙️ Options
 
 Set these as environment variables (same names on every platform):
 
@@ -167,13 +191,13 @@ Set these as environment variables (same names on every platform):
 Example: `PORT=9000 MODELS_DIR=~/models ./scripts/unix/serve.sh`
 (Windows: `$env:PORT = "9000"; .\scripts\win\serve.bat`)
 
-## Notes
+## 🔒 Notes
 
 - The server listens on localhost only by default and has no API key. Don't expose the port to a network you don't trust.
 - Model files are ignored by git (see `.gitignore`).
 - Press `Ctrl+C` in the terminal to stop the server.
 
-## Troubleshooting
+## 🩺 Troubleshooting
 
 | Problem | Fix |
 |---|---|
@@ -184,6 +208,6 @@ Example: `PORT=9000 MODELS_DIR=~/models ./scripts/unix/serve.sh`
 | Very slow replies | Use a smaller model, or add threads: `EXTRA_ARGS="-t 8"`. |
 | Model fails to load / out of memory | The model is too big for your RAM. Pick a smaller or more compressed one (for example `Q4_K_M`). |
 
-## License
+## 📄 License
 
-[MIT](LICENSE)
+[MIT](LICENSE) © Kunal Suri
